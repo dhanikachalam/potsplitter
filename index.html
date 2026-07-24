@@ -50,14 +50,14 @@
             <button onclick="addPlayer()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition w-full sm:w-auto shadow-sm">Add Player</button>
         </div>
 
-        <!-- Players List View Switcher & Table Container -->
+        <!-- Players List Container -->
         <div class="mt-6">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="font-semibold text-base sm:text-lg">Players Overview</h2>
             </div>
             
-            <!-- Desktop/Tablet Table View -->
-            <div id="players-list" class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+            <!-- Desktop/Tablet Table View (Hidden on Mobile) -->
+            <div id="players-list" class="hidden sm:block overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
                 <table class="w-full text-left border-collapse min-w-[500px]">
                     <thead>
                         <tr class="border-b bg-slate-50 text-slate-600 text-sm">
@@ -73,9 +73,14 @@
                 </table>
             </div>
 
-            <!-- Mobile Card View (Optimized for small screens) -->
+            <!-- Mobile Card View (Visible only on Mobile) -->
             <div id="players-cards" class="grid grid-cols-1 gap-3 sm:hidden mt-3">
                 <!-- Dynamically populated cards for mobile view -->
+            </div>
+            
+            <!-- Mobile Totals Card (Visible only on Mobile) -->
+            <div id="mobile-total-card" class="bg-slate-100 p-4 rounded-xl border border-slate-200 shadow-sm sm:hidden mt-3 font-bold text-sm flex justify-between items-center">
+                <!-- Dynamically populated mobile total -->
             </div>
         </div>
 
@@ -146,6 +151,7 @@
         function updateTable() {
             const body = document.getElementById('players-body');
             const cardsContainer = document.getElementById('players-cards');
+            const mobileTotalCard = document.getElementById('mobile-total-card');
             const footer = document.getElementById('players-footer');
             
             // SVG Icons for Edit (Pencil) and Delete (Trash)
@@ -201,6 +207,14 @@
             const totalNet = players.reduce((s, p) => s + (p.stack - (p.buyin + p.rebuy)), 0);
 
             footer.innerHTML = `<tr><td class="p-3.5">Total</td><td class="p-3.5">${totalInv}</td><td class="p-3.5">${totalStack}</td><td class="p-3.5 ${totalNet === 0 ? 'text-slate-900' : 'text-red-600'}">${totalNet}</td><td class="p-3.5"></td></tr>`;
+            
+            mobileTotalCard.innerHTML = `
+                <span>Total Balance Check</span>
+                <div class="text-right text-xs">
+                    <div>Invested: <strong>${totalInv}</strong> | Stack: <strong>${totalStack}</strong></div>
+                    <div class="${totalNet === 0 ? 'text-slate-700' : 'text-red-600'}">Net Sum: <strong>${totalNet}</strong></div>
+                </div>
+            `;
         }
 
         function calculateDebts() {
