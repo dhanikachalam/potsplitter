@@ -6,146 +6,783 @@
     <title>Poker Debt Settlement Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .poker-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            border: 3px dashed rgba(255, 255, 255, 0.75);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 0 0 2px rgba(0, 0, 0, 0.15);
+            font-weight: 700;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .poker-chip-light {
+            border-color: rgba(51, 65, 85, 0.45);
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen py-4 px-3 sm:p-6 md:p-8">
+<body class="bg-slate-100 text-slate-900 min-h-screen py-4 px-3 sm:p-6 md:p-8">
 
-    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-10">
+    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
         <!-- Header -->
-        <div class="mb-6 sm:mb-8 text-center sm:text-left">
-            <h1 class="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Poker Debt Settlement Assistant</h1>
-            <p class="text-sm sm:text-base text-slate-500">Calculate your game results and minimize transactions.</p>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Poker Debt Settlement</h1>
+                <p class="text-sm text-slate-500">Track buy-ins, count final chip stacks, and minimize settlement transfers.</p>
+            </div>
+            <button onclick="toggleSettings()" id="settings-toggle-btn" class="inline-flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition self-start sm:self-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Chip &amp; Buy-in Settings</span>
+            </button>
         </div>
 
-        <!-- Edit Modal -->
-        <div id="edit-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div class="bg-white p-5 sm:p-6 rounded-2xl shadow-2xl w-full max-w-sm">
-                <h2 class="text-xl font-bold mb-4">Edit Player</h2>
-                <input id="edit-id" type="hidden">
-                <label class="block text-sm font-medium mb-1">Name</label>
-                <input id="edit-name" class="border border-slate-300 p-2.5 rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <label class="block text-sm font-medium mb-1">Buy-in</label>
-                <input id="edit-buyin" type="number" class="border border-slate-300 p-2.5 rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <label class="block text-sm font-medium mb-1">Re-buys</label>
-                <input id="edit-rebuy" type="number" class="border border-slate-300 p-2.5 rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <label class="block text-sm font-medium mb-1">Final Stack</label>
-                <input id="edit-stack" type="number" class="border border-slate-300 p-2.5 rounded-lg w-full mb-5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <div class="flex gap-2">
-                    <button onclick="saveEdit()" class="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-semibold flex-1 hover:bg-indigo-700 transition">Save</button>
-                    <button onclick="closeEdit()" class="bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-semibold flex-1 hover:bg-slate-300 transition">Cancel</button>
+        <!-- Compact Chip Legend & Buy-in Summary Bar -->
+        <div onclick="toggleSettings()" title="Click to customize chip values and standard buy-in" class="cursor-pointer bg-slate-50 hover:bg-slate-100/80 transition border border-slate-200 rounded-2xl p-3 sm:px-4 mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3" id="chip-summary-bar">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="flex items-center gap-3 text-xs sm:text-sm font-medium text-slate-600 border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-end border-slate-200">
+                <div>Standard Buy-in: <strong class="text-slate-900 text-sm sm:text-base" id="summary-buyin-val">200</strong></div>
+                <span class="text-indigo-600 font-semibold text-xs underline">Edit</span>
+            </div>
+        </div>
+
+        <!-- Collapsible Settings Panel -->
+        <div id="settings-panel" class="hidden bg-slate-50 border border-indigo-200 rounded-2xl p-4 sm:p-5 mb-6 shadow-inner">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-200">
+                <div>
+                    <h2 class="font-bold text-base sm:text-lg text-slate-800">Chip Values &amp; Standard Buy-in Configuration</h2>
+                    <p class="text-xs text-slate-500">Define each chip's currency value and how many chips make up 1 Standard Buy-in.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="resetChipDefaults()" class="text-xs text-slate-500 hover:text-red-600 font-medium underline">Reset Defaults</button>
                 </div>
             </div>
-        </div>
 
-        <!-- Input Section -->
-        <div id="input-section" class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 mb-6">
-            <h2 class="font-semibold text-base sm:text-lg mb-3">Add Player</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
-                <input id="p-name" placeholder="Name" class="border border-slate-300 p-3 rounded-xl w-full bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <input id="p-buyin" type="number" placeholder="Buy-in" class="border border-slate-300 p-3 rounded-xl w-full bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <input id="p-rebuy" type="number" placeholder="Re-buys" class="border border-slate-300 p-3 rounded-xl w-full bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <input id="p-stack" type="number" placeholder="Final Stack" class="border border-slate-300 p-3 rounded-xl w-full bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <!-- Calculated Standard Buy-in Banner -->
+            <div class="mb-4 bg-white border border-slate-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Calculated Standard Buy-in / Re-buy</span>
+                    <div class="flex flex-wrap items-baseline gap-2 mt-0.5">
+                        <strong id="setting-buyin-total" class="text-xl font-bold text-indigo-600">200</strong>
+                        <span id="setting-buyin-formula" class="text-xs text-slate-500 font-mono"></span>
+                    </div>
+                </div>
+                <button onclick="applyBuyInStackToAllPlayers()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition self-start sm:self-auto">
+                    Reset All Players to Starting Stack
+                </button>
             </div>
-            <button onclick="addPlayer()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition w-full sm:w-auto shadow-sm">Add Player</button>
+
+            <!-- Chip Denominations Editor -->
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Colored Chips (Ordered High to Low)</label>
+                    <button id="add-chip-btn" onclick="addChipType()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">+ Add Chip Color</button>
+                </div>
+                <div id="chip-settings-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="toggleSettings()" class="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition">Done</button>
+            </div>
         </div>
 
-        <!-- Players List Container -->
-        <div class="mt-6">
+        <!-- Add Player Section -->
+        <div class="bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200 mb-6">
+            <div class="flex flex-col sm:flex-row gap-2.5 sm:items-center">
+                <div class="flex-1">
+                    <input id="p-name" placeholder="Enter player name (e.g., Alex)..." onkeydown="if(event.key==='Enter') addPlayer()" class="border border-slate-300 px-3.5 py-2.5 rounded-xl w-full bg-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button onclick="addPlayer()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition text-sm sm:text-base whitespace-nowrap shadow-sm">
+                    + Add Player
+                </button>
+            </div>
+        </div>
+
+        <!-- Players Overview -->
+        <div>
             <div class="flex items-center justify-between mb-3">
-                <h2 class="font-semibold text-base sm:text-lg">Players Overview</h2>
+                <h2 class="font-semibold text-base sm:text-lg text-slate-800">Players Overview</h2>
+                <span class="text-xs text-slate-500">Tap a player's stack to count their colored chips</span>
             </div>
-            
-            <!-- Desktop/Tablet Table View (Hidden on Mobile) -->
-            <div id="players-list" class="hidden sm:block overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-                <table class="w-full text-left border-collapse min-w-[500px]">
+
+            <!-- Desktop/Tablet Table View -->
+            <div class="hidden sm:block overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b bg-slate-50 text-slate-600 text-sm">
+                        <tr class="border-b bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
                             <th class="p-3.5">Player</th>
+                            <th class="p-3.5">Buy-ins &amp; Re-buys</th>
                             <th class="p-3.5">Total Invested</th>
-                            <th class="p-3.5">Stack</th>
+                            <th class="p-3.5">Final Stack (Chips)</th>
                             <th class="p-3.5">Net</th>
                             <th class="p-3.5 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="players-body" class="divide-y divide-slate-100 text-sm"></tbody>
-                    <tfoot id="players-footer" class="bg-slate-100/70 font-bold border-t-2 border-slate-200 text-sm"></tfoot>
+                    <tfoot id="players-footer" class="bg-slate-100/80 font-bold border-t-2 border-slate-200 text-sm"></tfoot>
                 </table>
             </div>
 
-            <!-- Mobile Card View (Visible only on Mobile) -->
-            <div id="players-cards" class="grid grid-cols-1 gap-3 sm:hidden mt-3">
-                <!-- Dynamically populated cards for mobile view -->
-            </div>
-            
-            <!-- Mobile Totals Card (Visible only on Mobile) -->
-            <div id="mobile-total-card" class="bg-slate-100 p-4 rounded-xl border border-slate-200 shadow-sm sm:hidden mt-3 font-bold text-sm flex justify-between items-center">
-                <!-- Dynamically populated mobile total -->
-            </div>
+            <!-- Mobile Card View -->
+            <div id="players-cards" class="grid grid-cols-1 gap-3 sm:hidden"></div>
+
+            <!-- Mobile Totals Card -->
+            <div id="mobile-total-card" class="bg-slate-100 p-4 rounded-xl border border-slate-200 shadow-sm sm:hidden mt-3 font-bold text-sm"></div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="mt-6 flex flex-col sm:flex-row gap-3">
-            <button onclick="calculateDebts()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition w-full sm:w-auto shadow-sm text-center">Generate Settlement</button>
-            <button onclick="resetApp()" class="bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-300 transition w-full sm:w-auto text-center">Reset</button>
+        <div class="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <button onclick="calculateDebts()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition shadow-sm text-center">
+                Generate Settlement Plan
+            </button>
+            <div class="flex gap-2">
+                <button onclick="clearAllStacks()" class="flex-1 sm:flex-initial bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-200 transition text-center">
+                    New Round (Reset Stacks)
+                </button>
+                <button onclick="resetApp()" class="flex-1 sm:flex-initial bg-red-50 text-red-600 border border-red-100 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-red-100 transition text-center">
+                    Clear Players
+                </button>
+            </div>
         </div>
 
         <!-- Result Section -->
-        <div id="result-section" class="mt-6 hidden p-5 sm:p-6 bg-slate-100 rounded-2xl border border-slate-200"></div>
+        <div id="result-section" class="mt-6 hidden p-5 sm:p-6 bg-slate-50 rounded-2xl border border-slate-200"></div>
+    </div>
+
+    <!-- Chip Counter & Player Edit Modal -->
+    <div id="chip-modal" onclick="handleBackdropClick(event)" class="hidden fixed inset-0 bg-slate-900/30 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+        <div id="chip-modal-dialog" class="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
+            <!-- Modal Header (Drag Handle) -->
+            <div id="chip-modal-header" onpointerdown="startModalDrag(event)" style="touch-action: none;" class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-100/80 cursor-move select-none">
+                <div class="flex items-center gap-2.5 flex-1 mr-3">
+                    <span title="Drag to move window" class="text-slate-400 hover:text-slate-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M7 4a1 1 0 11-2 0 1 1 0 012 0zm0 4a1 1 0 11-2 0 1 1 0 012 0zm0 4a1 1 0 11-2 0 1 1 0 012 0zm0 4a1 1 0 11-2 0 1 1 0 012 0zm8-12a1 1 0 11-2 0 1 1 0 012 0zm0 4a1 1 0 11-2 0 1 1 0 012 0zm0 4a1 1 0 11-2 0 1 1 0 012 0zm0 4a1 1 0 11-2 0 1 1 0 012 0z" />
+                        </svg>
+                    </span>
+                    <input id="modal-player-name" class="font-bold text-lg text-slate-900 bg-white border border-slate-300 rounded-lg px-2.5 py-1 w-full max-w-[220px] cursor-text focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Player Name">
+                </div>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="resetModalPosition()" title="Center window" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition text-xs font-medium">
+                        Center
+                    </button>
+                    <button type="button" onclick="closeModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-5 overflow-y-auto space-y-5 flex-1">
+                <!-- Buy-in & Re-buys Row -->
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Buy-ins &amp; Re-buys</div>
+                        <div class="text-sm text-slate-600 mt-0.5">
+                            Invested: <strong id="modal-invested-total" class="text-slate-900">200</strong>
+                            <span class="text-xs text-slate-400" id="modal-buyin-formula"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-xs text-slate-500 font-medium">Re-buys:</div>
+                        <div class="inline-flex items-center bg-white border border-slate-300 rounded-xl overflow-hidden shadow-sm">
+                            <button type="button" onclick="adjustModalRebuy(-1)" class="px-3 py-1.5 text-slate-700 hover:bg-slate-100 font-bold text-base active:bg-slate-200 transition">−</button>
+                            <span id="modal-rebuy-count" class="px-3 py-1.5 font-bold text-sm min-w-[2.25rem] text-center">0</span>
+                            <button type="button" onclick="adjustModalRebuy(1)" class="px-3 py-1.5 text-slate-700 hover:bg-slate-100 font-bold text-base active:bg-slate-200 transition">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chip Counter List -->
+                <div>
+                    <div class="flex items-center justify-between mb-2.5">
+                        <label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Final Stack — Count Colored Chips</label>
+                        <div class="flex items-center gap-3">
+                            <button type="button" onclick="setModalDefaultBuyInChips()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Set Default Stack</button>
+                            <button type="button" onclick="clearModalChips()" class="text-xs text-slate-500 hover:text-red-600 font-medium">Reset to 0</button>
+                        </div>
+                    </div>
+                    <div id="modal-chips-list" class="space-y-2.5">
+                        <!-- Dynamically populated rows for each chip color -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer with Live Summary -->
+            <div class="px-5 py-4 bg-slate-50 border-t border-slate-200">
+                <div class="flex items-center justify-between mb-3 text-sm">
+                    <div>
+                        <span class="text-slate-500">Final Stack Total:</span>
+                        <strong id="modal-stack-total" class="text-lg text-slate-900 ml-1">0</strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-500">Net Result:</span>
+                        <strong id="modal-net-total" class="text-lg ml-1">0</strong>
+                    </div>
+                </div>
+                <div class="flex gap-2.5">
+                    <button type="button" onclick="saveModal()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold flex-1 hover:bg-indigo-700 transition shadow-sm">
+                        Save Player Stack
+                    </button>
+                    <button type="button" onclick="closeModal()" class="bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-300 transition">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        let players = [
-            { id: 1, name: 'Player 1', buyin: 200, rebuy: 0, stack: 200 },
-            { id: 2, name: 'Player 2', buyin: 200, rebuy: 0, stack: 200 },
-            { id: 3, name: 'Player 3', buyin: 200, rebuy: 0, stack: 200 },
-            { id: 4, name: 'Player 4', buyin: 200, rebuy: 0, stack: 200 },
-            { id: 5, name: 'Player 5', buyin: 200, rebuy: 0, stack: 200 }
+        const STORAGE_KEY = 'poker_potsplitter_state_v4';
+
+        const CHIP_COLOR_PRESETS = [
+            { name: 'Red',    bg: '#dc2626', text: '#ffffff', light: false },
+            { name: 'Green',  bg: '#16a34a', text: '#ffffff', light: false },
+            { name: 'Black',  bg: '#1e293b', text: '#ffffff', light: false },
+            { name: 'White',  bg: '#f8fafc', text: '#0f172a', light: true },
+            { name: 'Blue',   bg: '#2563eb', text: '#ffffff', light: false },
+            { name: 'Yellow', bg: '#eab308', text: '#0f172a', light: true },
+            { name: 'Purple', bg: '#7c3aed', text: '#ffffff', light: false },
+            { name: 'Orange', bg: '#ea580c', text: '#ffffff', light: false }
         ];
 
-        function addPlayer() {
-            const name = document.getElementById('p-name').value.trim() || `Player ${players.length + 1}`;
-            const buyin = parseFloat(document.getElementById('p-buyin').value) || 0;
-            const rebuy = parseFloat(document.getElementById('p-rebuy').value) || 0;
-            const stack = parseFloat(document.getElementById('p-stack').value) || 0;
+        // Default: (20×5) + (10×6) + (4×5) + (2×10) = 200, ordered high (Red) to low (White)
+        const DEFAULT_CHIPS = [
+            { id: 'c_red',   name: 'Red',   color: 'Red',   value: 20, defaultCount: 5 },
+            { id: 'c_green', name: 'Green', color: 'Green', value: 10, defaultCount: 6 },
+            { id: 'c_black', name: 'Black', color: 'Black', value: 4,  defaultCount: 5 },
+            { id: 'c_white', name: 'White', color: 'White', value: 2,  defaultCount: 10 }
+        ];
 
-            players.push({ id: Date.now(), name, buyin, rebuy, stack });
+        let chipsConfig = JSON.parse(JSON.stringify(DEFAULT_CHIPS));
+        let standardBuyIn = 200;
+
+        function getDefaultStartingChips() {
+            const counts = {};
+            chipsConfig.forEach(c => {
+                const qty = Number(c.defaultCount) || 0;
+                if (qty > 0) counts[c.id] = qty;
+            });
+            return counts;
+        }
+
+        function recalculateStandardBuyIn() {
+            const total = chipsConfig.reduce((sum, c) => {
+                const qty = Number(c.defaultCount) || 0;
+                return sum + (c.value * qty);
+            }, 0);
+            if (total > 0) {
+                standardBuyIn = total;
+            }
+        }
+
+        function syncUneditedPlayerStacks() {
+            players.forEach(p => {
+                if (!p.customStack) {
+                    p.chips = getDefaultStartingChips();
+                }
+            });
+        }
+
+        let players = [
+            { id: 1, name: 'Player 1', buyins: 1, rebuys: 0, chips: getDefaultStartingChips(), customStack: false },
+            { id: 2, name: 'Player 2', buyins: 1, rebuys: 0, chips: getDefaultStartingChips(), customStack: false },
+            { id: 3, name: 'Player 3', buyins: 1, rebuys: 0, chips: getDefaultStartingChips(), customStack: false },
+            { id: 4, name: 'Player 4', buyins: 1, rebuys: 0, chips: getDefaultStartingChips(), customStack: false },
+            { id: 5, name: 'Player 5', buyins: 1, rebuys: 0, chips: getDefaultStartingChips(), customStack: false }
+        ];
+
+        let activeModalPlayerId = null;
+        let modalRebuys = 0;
+        let modalChips = {};
+
+        function sortChipsHighToLow() {
+            chipsConfig.sort((a, b) => b.value - a.value);
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed.chipsConfig) && parsed.chipsConfig.length > 0) {
+                    chipsConfig = parsed.chipsConfig.map(c => ({
+                        ...c,
+                        defaultCount: typeof c.defaultCount === 'number' ? c.defaultCount : 0
+                    }));
+                    sortChipsHighToLow();
+                    recalculateStandardBuyIn();
+                }
+                if (Array.isArray(parsed.players)) {
+                    players = parsed.players;
+                }
+            } catch (e) {
+                console.warn('Could not load saved state:', e);
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    standardBuyIn,
+                    chipsConfig,
+                    players
+                }));
+            } catch (e) {
+                console.warn('Could not save state:', e);
+            }
+        }
+
+        function getColorPreset(colorName) {
+            return CHIP_COLOR_PRESETS.find(c => c.name === colorName) || CHIP_COLOR_PRESETS[0];
+        }
+
+        function renderChipBadge(chip, sizeClass = 'w-7 h-7 text-xs') {
+            const preset = getColorPreset(chip.color);
+            const lightClass = preset.light ? 'poker-chip-light' : '';
+            return `<span class="poker-chip ${lightClass} ${sizeClass}" style="background-color:${preset.bg}; color:${preset.text};" title="${escapeHtml(chip.name)} (${chip.value})">${chip.value}</span>`;
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatNum(num) {
+            return Number.isInteger(num) ? String(num) : num.toFixed(2).replace(/\.00$/, '');
+        }
+
+        function getBuyInFormulaText() {
+            const parts = chipsConfig
+                .filter(c => (Number(c.defaultCount) || 0) > 0)
+                .map(c => `(${formatNum(c.value)}×${c.defaultCount})`);
+            return parts.length ? parts.join(' + ') : '';
+        }
+
+        function getPlayerInvested(player) {
+            return ((player.buyins || 1) + (player.rebuys || 0)) * standardBuyIn;
+        }
+
+        function getPlayerStack(player) {
+            if (!player.chips) return 0;
+            return chipsConfig.reduce((sum, chip) => {
+                const count = Number(player.chips[chip.id]) || 0;
+                return sum + count * chip.value;
+            }, 0);
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                renderSettingsInputs();
+            }
+        }
+
+        function renderSummaryBar() {
+            const bar = document.getElementById('chip-summary-bar');
+            const formula = getBuyInFormulaText();
+            document.getElementById('summary-buyin-val').innerHTML =
+                `${formatNum(standardBuyIn)}` +
+                (formula ? ` <span class="text-xs font-normal text-slate-500 hidden md:inline">[${formula}]</span>` : '');
+
+            bar.innerHTML = chipsConfig.map(chip => {
+                const qty = Number(chip.defaultCount) || 0;
+                return `
+                    <div class="inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-full pl-1 pr-2.5 py-0.5 shadow-sm">
+                        ${renderChipBadge(chip, 'w-6 h-6 text-[11px]')}
+                        <span class="text-xs font-semibold text-slate-700">${escapeHtml(chip.name)}</span>
+                        <span class="text-xs font-bold text-slate-900">= ${formatNum(chip.value)}</span>
+                        <span class="text-[11px] text-slate-400 font-medium">(×${qty})</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSettingsInputs() {
+            const totalEl = document.getElementById('setting-buyin-total');
+            const formulaEl = document.getElementById('setting-buyin-formula');
+            if (totalEl) totalEl.textContent = formatNum(standardBuyIn);
+            if (formulaEl) {
+                const formula = getBuyInFormulaText();
+                formulaEl.textContent = formula ? `= ${formula}` : '';
+            }
+
+            const list = document.getElementById('chip-settings-list');
+            const addBtn = document.getElementById('add-chip-btn');
+            addBtn.style.display = chipsConfig.length >= 6 ? 'none' : 'inline-block';
+
+            list.innerHTML = chipsConfig.map((chip) => {
+                const options = CHIP_COLOR_PRESETS.map(preset =>
+                    `<option value="${preset.name}" ${preset.name === chip.color ? 'selected' : ''}>${preset.name}</option>`
+                ).join('');
+                const qty = Number(chip.defaultCount) || 0;
+                const chipSub = chip.value * qty;
+
+                return `
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2.5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                ${renderChipBadge(chip, 'w-7 h-7 text-xs')}
+                                <select onchange="updateChipColor('${chip.id}', this.value)" class="text-xs font-semibold border border-slate-200 rounded-lg px-2 py-1 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    ${options}
+                                </select>
+                            </div>
+                            ${chipsConfig.length > 2 ? `
+                                <button onclick="removeChipType('${chip.id}')" title="Remove chip color" class="text-slate-400 hover:text-red-500 p-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] text-slate-400 font-medium mb-0.5">Chip Value</label>
+                                <input type="number" min="0.01" step="any" value="${chip.value}" onchange="updateChipValue('${chip.id}', this.value)" class="border border-slate-300 rounded-lg px-2 py-1.5 w-full text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-400 font-medium mb-0.5">Buy-in Qty</label>
+                                <input type="number" min="0" step="1" value="${qty}" onchange="updateChipDefaultCount('${chip.id}', this.value)" class="border border-slate-300 rounded-lg px-2 py-1.5 w-full text-sm font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div class="text-[11px] text-slate-500 flex justify-between border-t border-slate-100 pt-1.5">
+                            <span>Buy-in Subtotal:</span>
+                            <strong class="text-slate-700">${formatNum(chip.value)} × ${qty} = ${formatNum(chipSub)}</strong>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateChipColor(chipId, newColor) {
+            const chip = chipsConfig.find(c => c.id === chipId);
+            if (!chip) return;
+            chip.color = newColor;
+            chip.name = newColor;
+            saveState();
+            renderSettingsInputs();
+            renderSummaryBar();
             updateTable();
-            document.getElementById('p-name').value = '';
-            document.getElementById('p-buyin').value = '';
-            document.getElementById('p-rebuy').value = '';
-            document.getElementById('p-stack').value = '';
+        }
+
+        function updateChipValue(chipId, newValue) {
+            const chip = chipsConfig.find(c => c.id === chipId);
+            const parsed = parseFloat(newValue);
+            if (!chip || !(parsed > 0)) return;
+            chip.value = parsed;
+            sortChipsHighToLow();
+            recalculateStandardBuyIn();
+            saveState();
+            renderSettingsInputs();
+            renderSummaryBar();
+            updateTable();
+        }
+
+        function updateChipDefaultCount(chipId, newQty) {
+            const chip = chipsConfig.find(c => c.id === chipId);
+            if (!chip) return;
+            const parsed = Math.max(0, parseInt(newQty, 10) || 0);
+            chip.defaultCount = parsed;
+            recalculateStandardBuyIn();
+            syncUneditedPlayerStacks();
+            saveState();
+            renderSettingsInputs();
+            renderSummaryBar();
+            updateTable();
+        }
+
+        function applyBuyInStackToAllPlayers() {
+            players.forEach(p => {
+                p.chips = getDefaultStartingChips();
+                p.customStack = false;
+            });
+            saveState();
+            updateTable();
+        }
+
+        function addChipType() {
+            if (chipsConfig.length >= 6) return;
+            const usedColors = new Set(chipsConfig.map(c => c.color));
+            const nextPreset = CHIP_COLOR_PRESETS.find(p => !usedColors.has(p.name)) || CHIP_COLOR_PRESETS[0];
+            const maxVal = chipsConfig.reduce((m, c) => Math.max(m, c.value), 0);
+            chipsConfig.push({
+                id: 'c_' + Date.now(),
+                name: nextPreset.name,
+                color: nextPreset.name,
+                value: maxVal ? maxVal * 2 : 10,
+                defaultCount: 0
+            });
+            sortChipsHighToLow();
+            recalculateStandardBuyIn();
+            saveState();
+            renderSettingsInputs();
+            renderSummaryBar();
+            updateTable();
+        }
+
+        function removeChipType(chipId) {
+            if (chipsConfig.length <= 2) return;
+            chipsConfig = chipsConfig.filter(c => c.id !== chipId);
+            recalculateStandardBuyIn();
+            syncUneditedPlayerStacks();
+            saveState();
+            renderSettingsInputs();
+            renderSummaryBar();
+            updateTable();
+        }
+
+        function resetChipDefaults() {
+            chipsConfig = JSON.parse(JSON.stringify(DEFAULT_CHIPS));
+            recalculateStandardBuyIn();
+            syncUneditedPlayerStacks();
+            saveState();
+            renderSettingsInputs();
+            renderSummaryBar();
+            updateTable();
+        }
+
+        function addPlayer() {
+            const input = document.getElementById('p-name');
+            const name = input.value.trim() || `Player ${players.length + 1}`;
+            players.push({
+                id: Date.now(),
+                name,
+                buyins: 1,
+                rebuys: 0,
+                chips: getDefaultStartingChips(),
+                customStack: false
+            });
+            input.value = '';
+            saveState();
+            updateTable();
         }
 
         function deletePlayer(id) {
             players = players.filter(p => p.id !== id);
+            saveState();
             updateTable();
         }
 
-        function openEdit(id) {
+        function changeRebuy(id, delta) {
             const p = players.find(player => player.id === id);
             if (!p) return;
-            document.getElementById('edit-id').value = p.id;
-            document.getElementById('edit-name').value = p.name;
-            document.getElementById('edit-buyin').value = p.buyin;
-            document.getElementById('edit-rebuy').value = p.rebuy;
-            document.getElementById('edit-stack').value = p.stack;
-            document.getElementById('edit-modal').classList.remove('hidden');
+            p.rebuys = Math.max(0, (p.rebuys || 0) + delta);
+            saveState();
+            updateTable();
         }
 
-        function closeEdit() { document.getElementById('edit-modal').classList.add('hidden'); }
+        let modalDragOffset = { x: 0, y: 0 };
+        let isDraggingModal = false;
+        let dragStartPointer = { x: 0, y: 0 };
+        let dragStartOffset = { x: 0, y: 0 };
+        let justFinishedDragging = false;
 
-        function saveEdit() {
-            const id = parseInt(document.getElementById('edit-id').value);
-            const p = players.find(player => player.id === id);
-            if (p) {
-                p.name = document.getElementById('edit-name').value.trim();
-                p.buyin = parseFloat(document.getElementById('edit-buyin').value) || 0;
-                p.rebuy = parseFloat(document.getElementById('edit-rebuy').value) || 0;
-                p.stack = parseFloat(document.getElementById('edit-stack').value) || 0;
+        function applyModalTransform() {
+            const dialog = document.getElementById('chip-modal-dialog');
+            if (dialog) {
+                dialog.style.transform = `translate(${modalDragOffset.x}px, ${modalDragOffset.y}px)`;
             }
+        }
+
+        function resetModalPosition() {
+            modalDragOffset = { x: 0, y: 0 };
+            applyModalTransform();
+        }
+
+        function startModalDrag(e) {
+            // Do not initiate drag when interacting with inputs or buttons in header
+            if (e.target.closest('input, button, select, a')) return;
+            const dialog = document.getElementById('chip-modal-dialog');
+            if (!dialog) return;
+
+            isDraggingModal = true;
+            justFinishedDragging = false;
+            dragStartPointer = { x: e.clientX, y: e.clientY };
+            dragStartOffset = { ...modalDragOffset };
+
+            const onPointerMove = (moveEvt) => {
+                if (!isDraggingModal) return;
+                const dx = moveEvt.clientX - dragStartPointer.x;
+                const dy = moveEvt.clientY - dragStartPointer.y;
+                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                    justFinishedDragging = true;
+                }
+                modalDragOffset = {
+                    x: dragStartOffset.x + dx,
+                    y: dragStartOffset.y + dy
+                };
+                applyModalTransform();
+            };
+
+            const onPointerUp = () => {
+                isDraggingModal = false;
+                window.removeEventListener('pointermove', onPointerMove);
+                window.removeEventListener('pointerup', onPointerUp);
+                setTimeout(() => { justFinishedDragging = false; }, 50);
+            };
+
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+        }
+
+        function handleBackdropClick(e) {
+            if (e.target.id === 'chip-modal' && !justFinishedDragging) {
+                closeModal();
+            }
+        }
+
+        function openChipModal(id) {
+            const p = players.find(player => player.id === id);
+            if (!p) return;
+            activeModalPlayerId = p.id;
+            modalRebuys = p.rebuys || 0;
+            modalChips = { ...(p.chips || {}) };
+
+            document.getElementById('modal-player-name').value = p.name;
+            renderModalContents();
+            applyModalTransform();
+            document.getElementById('chip-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('chip-modal').classList.add('hidden');
+            activeModalPlayerId = null;
+        }
+
+        function adjustModalRebuy(delta) {
+            modalRebuys = Math.max(0, modalRebuys + delta);
+            updateModalTotals();
+        }
+
+        function adjustModalChip(chipId, delta) {
+            const current = Number(modalChips[chipId]) || 0;
+            const next = Math.max(0, current + delta);
+            modalChips[chipId] = next;
+            const inputEl = document.getElementById(`modal-chip-input-${chipId}`);
+            if (inputEl) inputEl.value = next || '';
+            updateModalTotals();
+        }
+
+        function setModalChipCount(chipId, rawVal) {
+            const num = Math.max(0, parseInt(rawVal, 10) || 0);
+            modalChips[chipId] = num;
+            updateModalTotals();
+        }
+
+        function setModalDefaultBuyInChips() {
+            modalChips = getDefaultStartingChips();
+            renderModalContents();
+        }
+
+        function clearModalChips() {
+            modalChips = {};
+            renderModalContents();
+        }
+
+        function renderModalContents() {
+            const listEl = document.getElementById('modal-chips-list');
+            listEl.innerHTML = chipsConfig.map(chip => {
+                const count = Number(modalChips[chip.id]) || 0;
+                const subtotal = count * chip.value;
+                return `
+                    <div class="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            ${renderChipBadge(chip, 'w-9 h-9 text-xs')}
+                            <div class="truncate">
+                                <div class="font-bold text-sm text-slate-800">${escapeHtml(chip.name)}</div>
+                                <div class="text-xs text-slate-500">Value: <strong>${formatNum(chip.value)}</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <div class="inline-flex items-center bg-slate-50 border border-slate-300 rounded-xl overflow-hidden">
+                                <button type="button" onclick="adjustModalChip('${chip.id}', -5)" class="px-2 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-200 active:bg-slate-300 transition">-5</button>
+                                <button type="button" onclick="adjustModalChip('${chip.id}', -1)" class="px-2.5 py-1.5 text-sm font-bold text-slate-700 hover:bg-slate-200 active:bg-slate-300 transition border-l border-slate-200">−</button>
+                                <input id="modal-chip-input-${chip.id}" type="number" min="0" placeholder="0" value="${count || ''}" oninput="setModalChipCount('${chip.id}', this.value)" class="w-12 text-center font-bold text-sm bg-white py-1.5 focus:outline-none border-x border-slate-200">
+                                <button type="button" onclick="adjustModalChip('${chip.id}', 1)" class="px-2.5 py-1.5 text-sm font-bold text-slate-700 hover:bg-slate-200 active:bg-slate-300 transition border-r border-slate-200">+</button>
+                                <button type="button" onclick="adjustModalChip('${chip.id}', 5)" class="px-2 py-1.5 text-xs font-bold text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 transition">+5</button>
+                            </div>
+                            <div id="modal-chip-sub-${chip.id}" class="w-14 text-right font-bold text-sm text-slate-700">${formatNum(subtotal)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateModalTotals();
+        }
+
+        function updateModalTotals() {
+            document.getElementById('modal-rebuy-count').textContent = modalRebuys;
+            const invested = (1 + modalRebuys) * standardBuyIn;
+            document.getElementById('modal-invested-total').textContent = formatNum(invested);
+            document.getElementById('modal-buyin-formula').textContent =
+                `(${1 + modalRebuys} × ${formatNum(standardBuyIn)})`;
+
+            let stackTotal = 0;
+            chipsConfig.forEach(chip => {
+                const count = Number(modalChips[chip.id]) || 0;
+                const sub = count * chip.value;
+                stackTotal += sub;
+                const subEl = document.getElementById(`modal-chip-sub-${chip.id}`);
+                if (subEl) subEl.textContent = formatNum(sub);
+            });
+
+            const net = stackTotal - invested;
+            document.getElementById('modal-stack-total').textContent = formatNum(stackTotal);
+            const netEl = document.getElementById('modal-net-total');
+            netEl.textContent = (net > 0 ? '+' : '') + formatNum(net);
+            netEl.className = `text-lg ml-1 font-bold ${net >= 0 ? 'text-emerald-600' : 'text-red-600'}`;
+        }
+
+        function saveModal() {
+            const p = players.find(player => player.id === activeModalPlayerId);
+            if (p) {
+                const newName = document.getElementById('modal-player-name').value.trim();
+                if (newName) p.name = newName;
+                p.rebuys = modalRebuys;
+                p.chips = { ...modalChips };
+                p.customStack = true;
+            }
+            saveState();
             updateTable();
-            closeEdit();
+            closeModal();
+        }
+
+        function renderPlayerChipPills(player) {
+            const activeChips = chipsConfig.filter(c => (Number(player.chips?.[c.id]) || 0) > 0);
+            if (activeChips.length === 0) {
+                return `<span class="text-xs text-indigo-600 font-medium group-hover:underline">+ Count chips</span>`;
+            }
+            return `<div class="flex flex-wrap items-center gap-1 mt-1">` +
+                activeChips.map(c => {
+                    const count = Number(player.chips[c.id]);
+                    const preset = getColorPreset(c.color);
+                    return `<span class="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-md border border-slate-200 bg-slate-50 text-slate-700">
+                        <span class="w-2.5 h-2.5 rounded-full inline-block border border-slate-400/50" style="background-color:${preset.bg}"></span>
+                        ${count}×${formatNum(c.value)}
+                    </span>`;
+                }).join('') +
+            `</div>`;
         }
 
         function updateTable() {
@@ -153,109 +790,204 @@
             const cardsContainer = document.getElementById('players-cards');
             const mobileTotalCard = document.getElementById('mobile-total-card');
             const footer = document.getElementById('players-footer');
-            
-            // SVG Icons for Edit (Pencil) and Delete (Trash)
+
             const editIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
             const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
 
-            // Populate Desktop Table View
             body.innerHTML = players.map(p => {
-                const invested = p.buyin + p.rebuy;
-                const net = p.stack - invested;
+                const rebuys = p.rebuys || 0;
+                const invested = getPlayerInvested(p);
+                const stack = getPlayerStack(p);
+                const net = stack - invested;
+
                 return `
                     <tr class="hover:bg-slate-50/80 transition">
-                        <td class="p-3.5 font-medium">${p.name}</td>
-                        <td class="p-3.5">${invested}</td>
-                        <td class="p-3.5">${p.stack}</td>
-                        <td class="p-3.5 font-bold ${net >= 0 ? 'text-emerald-600' : 'text-red-600'}">${net}</td>
+                        <td class="p-3.5 font-semibold text-slate-800">${escapeHtml(p.name)}</td>
+                        <td class="p-3.5">
+                            <div class="inline-flex items-center gap-1.5">
+                                <span class="text-xs text-slate-500">1 buy-in +</span>
+                                <div class="inline-flex items-center bg-slate-100 border border-slate-200 rounded-lg overflow-hidden">
+                                    <button onclick="changeRebuy(${p.id}, -1)" class="px-2 py-0.5 text-slate-600 hover:bg-slate-200 font-bold text-xs">−</button>
+                                    <span class="px-2 py-0.5 font-bold text-xs text-slate-800">${rebuys}</span>
+                                    <button onclick="changeRebuy(${p.id}, 1)" class="px-2 py-0.5 text-slate-600 hover:bg-slate-200 font-bold text-xs">+</button>
+                                </div>
+                                <span class="text-xs text-slate-500">re-buys</span>
+                            </div>
+                        </td>
+                        <td class="p-3.5 font-medium text-slate-700">${formatNum(invested)}</td>
+                        <td class="p-3.5">
+                            <button onclick="openChipModal(${p.id})" class="group text-left w-full rounded-xl p-2 -m-2 hover:bg-indigo-50/70 transition">
+                                <div class="font-bold text-slate-900">${formatNum(stack)}</div>
+                                ${renderPlayerChipPills(p)}
+                            </button>
+                        </td>
+                        <td class="p-3.5 font-bold ${net >= 0 ? 'text-emerald-600' : 'text-red-600'}">${net > 0 ? '+' : ''}${formatNum(net)}</td>
                         <td class="p-3.5 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button onclick="openEdit(${p.id})" title="Edit" class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition">${editIcon}</button>
-                                <button onclick="deletePlayer(${p.id})" title="Delete" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition">${deleteIcon}</button>
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="openChipModal(${p.id})" title="Count Chips / Edit Player" class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition">${editIcon}</button>
+                                <button onclick="deletePlayer(${p.id})" title="Delete Player" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition">${deleteIcon}</button>
                             </div>
                         </td>
                     </tr>
                 `;
             }).join('');
 
-            // Populate Mobile Card View
             cardsContainer.innerHTML = players.map(p => {
-                const invested = p.buyin + p.rebuy;
-                const net = p.stack - invested;
+                const rebuys = p.rebuys || 0;
+                const invested = getPlayerInvested(p);
+                const stack = getPlayerStack(p);
+                const net = stack - invested;
+
                 return `
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                            <span class="font-bold text-base text-slate-800">${p.name}</span>
-                            <span class="font-bold text-base ${net >= 0 ? 'text-emerald-600' : 'text-red-600'}">Net: ${net}</span>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                            <span class="font-bold text-base text-slate-800">${escapeHtml(p.name)}</span>
+                            <span class="font-bold text-sm px-2.5 py-0.5 rounded-full ${net >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}">
+                                Net: ${net > 0 ? '+' : ''}${formatNum(net)}
+                            </span>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 py-1">
-                            <div><span class="block text-slate-400">Total Invested</span><strong class="text-slate-700">${invested}</strong></div>
-                            <div><span class="block text-slate-400">Stack</span><strong class="text-slate-700">${p.stack}</strong></div>
-                        </div>
-                        <div class="flex justify-end items-center pt-2 border-t border-slate-100">
-                            <div class="flex items-center gap-1">
-                                <button onclick="openEdit(${p.id})" title="Edit" class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition">${editIcon}</button>
-                                <button onclick="deletePlayer(${p.id})" title="Delete" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition">${deleteIcon}</button>
+
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
+                                <div class="text-slate-400 font-medium mb-1">Invested (${1 + rebuys}×${formatNum(standardBuyIn)})</div>
+                                <div class="flex items-center justify-between">
+                                    <strong class="text-sm text-slate-800">${formatNum(invested)}</strong>
+                                    <div class="inline-flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+                                        <button onclick="changeRebuy(${p.id}, -1)" class="px-2 py-1 text-slate-600 font-bold">−</button>
+                                        <span class="px-1.5 font-bold text-slate-700">${rebuys}</span>
+                                        <button onclick="changeRebuy(${p.id}, 1)" class="px-2 py-1 text-slate-600 font-bold">+</button>
+                                    </div>
+                                </div>
                             </div>
+
+                            <button onclick="openChipModal(${p.id})" class="bg-indigo-50/50 hover:bg-indigo-50 border border-indigo-100 p-2.5 rounded-xl text-left flex flex-col justify-between transition">
+                                <div class="text-indigo-600 font-semibold flex items-center justify-between">
+                                    <span>Final Stack</span>
+                                    <span>Edit →</span>
+                                </div>
+                                <strong class="text-sm text-slate-900 mt-1">${formatNum(stack)}</strong>
+                            </button>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-1">
+                            <div onclick="openChipModal(${p.id})" class="cursor-pointer flex-1">
+                                ${renderPlayerChipPills(p)}
+                            </div>
+                            <button onclick="deletePlayer(${p.id})" title="Delete Player" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition ml-2">${deleteIcon}</button>
                         </div>
                     </div>
                 `;
             }).join('');
 
-            const totalInv = players.reduce((s, p) => s + p.buyin + p.rebuy, 0);
-            const totalStack = players.reduce((s, p) => s + p.stack, 0);
-            const totalNet = players.reduce((s, p) => s + (p.stack - (p.buyin + p.rebuy)), 0);
+            const totalInv = players.reduce((s, p) => s + getPlayerInvested(p), 0);
+            const totalStack = players.reduce((s, p) => s + getPlayerStack(p), 0);
+            const totalNet = totalStack - totalInv;
+            const isBalanced = Math.abs(totalNet) < 0.01;
 
-            footer.innerHTML = `<tr><td class="p-3.5">Total</td><td class="p-3.5">${totalInv}</td><td class="p-3.5">${totalStack}</td><td class="p-3.5 ${totalNet === 0 ? 'text-slate-900' : 'text-red-600'}">${totalNet}</td><td class="p-3.5"></td></tr>`;
-            
+            footer.innerHTML = `
+                <tr>
+                    <td class="p-3.5" colspan="2">Total (${players.length} Players)</td>
+                    <td class="p-3.5">${formatNum(totalInv)}</td>
+                    <td class="p-3.5">${formatNum(totalStack)}</td>
+                    <td class="p-3.5 ${isBalanced ? 'text-emerald-600' : 'text-red-600'}">
+                        ${totalNet > 0 ? '+' : ''}${formatNum(totalNet)}
+                        ${isBalanced ? '✓' : ''}
+                    </td>
+                    <td class="p-3.5"></td>
+                </tr>
+            `;
+
             mobileTotalCard.innerHTML = `
-                <span>Total Balance Check</span>
-                <div class="text-right text-xs">
-                    <div>Invested: <strong>${totalInv}</strong> | Stack: <strong>${totalStack}</strong></div>
-                    <div class="${totalNet === 0 ? 'text-slate-700' : 'text-red-600'}">Net Sum: <strong>${totalNet}</strong></div>
+                <div class="flex justify-between items-center">
+                    <span>Total Balance Check</span>
+                    <span class="px-2 py-0.5 rounded-md text-xs ${isBalanced ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'}">
+                        ${isBalanced ? 'Balanced ✓' : `Off by ${totalNet > 0 ? '+' : ''}${formatNum(totalNet)}`}
+                    </span>
+                </div>
+                <div class="flex justify-between text-xs font-normal text-slate-600 mt-2 pt-2 border-t border-slate-200">
+                    <span>Total Invested: <strong class="text-slate-900">${formatNum(totalInv)}</strong></span>
+                    <span>Total Stack: <strong class="text-slate-900">${formatNum(totalStack)}</strong></span>
                 </div>
             `;
         }
 
         function calculateDebts() {
             const resultDiv = document.getElementById('result-section');
-            const list = players.map(p => ({ ...p, net: p.stack - (p.buyin + p.rebuy) }));
+            const list = players.map(p => {
+                const invested = getPlayerInvested(p);
+                const stack = getPlayerStack(p);
+                return { ...p, invested, stack, net: stack - invested };
+            });
             const sum = list.reduce((a, b) => a + b.net, 0);
             resultDiv.classList.remove('hidden');
 
-            if (Math.abs(sum) > 0.1) {
-                resultDiv.innerHTML = `<h3 class="text-red-600 font-bold text-lg mb-1">Error! Settlement Imbalanced</h3><p class="text-sm text-slate-600">Total net is ${sum.toFixed(2)}. The sum of all final stacks must equal total investments (Balance must be 0).</p>`;
+            if (players.length === 0) {
+                resultDiv.innerHTML = `<p class="text-sm text-slate-600">Add players first to generate a settlement plan.</p>`;
                 return;
             }
 
-            let creditors = list.filter(p => p.net > 0).sort((a, b) => b.net - a.net);
-            let debtors = list.filter(p => p.net < 0).sort((a, b) => a.net - b.net);
+            if (Math.abs(sum) > 0.1) {
+                const statusMsg = sum < 0
+                    ? `Final stacks are short by <strong>${formatNum(Math.abs(sum))}</strong> compared to total buy-ins.`
+                    : `Final stacks exceed total buy-ins by <strong>${formatNum(sum)}</strong>.`;
+                resultDiv.innerHTML = `
+                    <h3 class="text-red-600 font-bold text-lg mb-1">Settlement Imbalanced</h3>
+                    <p class="text-sm text-slate-600">${statusMsg} Please recount player chip stacks or verify re-buys so the net balance is 0.</p>
+                `;
+                return;
+            }
+
+            let creditors = list.filter(p => p.net > 0.005).sort((a, b) => b.net - a.net);
+            let debtors = list.filter(p => p.net < -0.005).sort((a, b) => a.net - b.net);
             let steps = [];
 
             creditors.forEach(c => {
                 debtors.forEach(d => {
-                    if (d.net < 0 && c.net > 0) {
+                    if (d.net < -0.005 && c.net > 0.005) {
                         let val = Math.min(c.net, Math.abs(d.net));
-                        steps.push(`<strong>${d.name}</strong> pays <strong>${c.name}</strong>: <span class="text-emerald-700 font-semibold">${val.toFixed(2)}</span>`);
-                        c.net -= val; d.net += val;
+                        steps.push(`<strong>${escapeHtml(d.name)}</strong> pays <strong>${escapeHtml(c.name)}</strong>: <span class="text-emerald-700 font-bold">${formatNum(val)}</span>`);
+                        c.net -= val;
+                        d.net += val;
                     }
                 });
             });
 
+            if (steps.length === 0) {
+                resultDiv.innerHTML = `
+                    <h3 class="text-lg font-bold text-emerald-700 mb-1">All Even!</h3>
+                    <p class="text-sm text-slate-600">Every player broke even. No transfers needed.</p>
+                `;
+                return;
+            }
+
             resultDiv.innerHTML = `
                 <h3 class="text-lg sm:text-xl font-bold mb-3 text-slate-800">Optimized Settlement Plan</h3>
-                <ul class="space-y-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">${steps.map(s => `<li class="text-sm sm:text-base flex items-center gap-2">🔹 ${s}</li>`).join('')}</ul>
-                <p class="mt-3 text-xs sm:text-sm text-slate-500">Verification: All balances settled with minimal transactions.</p>
+                <ul class="space-y-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    ${steps.map(s => `<li class="text-sm sm:text-base flex items-center gap-2">🔹 <span>${s}</span></li>`).join('')}
+                </ul>
+                <p class="mt-3 text-xs sm:text-sm text-slate-500">All balances settled with minimal transactions (${steps.length} transfer${steps.length === 1 ? '' : 's'}).</p>
             `;
         }
 
-        function resetApp() { 
-            players = []; 
-            updateTable(); 
-            document.getElementById('result-section').classList.add('hidden'); 
+        function clearAllStacks() {
+            players = players.map(p => ({ ...p, buyins: 1, rebuys: 0, chips: getDefaultStartingChips(), customStack: false }));
+            saveState();
+            updateTable();
+            document.getElementById('result-section').classList.add('hidden');
         }
-        
-        window.onload = updateTable;
+
+        function resetApp() {
+            players = [];
+            saveState();
+            updateTable();
+            document.getElementById('result-section').classList.add('hidden');
+        }
+
+        window.onload = function () {
+            loadState();
+            renderSummaryBar();
+            updateTable();
+        };
     </script>
 </body>
 </html>
